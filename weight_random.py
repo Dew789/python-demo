@@ -3,6 +3,7 @@ Two ways to accomplish weight random in python
 '''
 
 import random
+from bisect import bisect
 
 
 def histogram(s):
@@ -18,35 +19,37 @@ def histogram(s):
     return d
 
 def list_method(hist):
-    '''Return a random item bease on the weight in hist, this method turn 
+    '''Return random item bease on the weight, this method turn 
     hist into list accordance the times it appears then choose a random item
-    in list 
 
     hist: a dictionary of item and item's weights
 
     returns: value in dist's key
     '''
-    data = [] 
+    t = [] 
     for value, weight in hist.items():       
-        temp = [value] * weight
-        data.extend(temp)
+        t.extend([value] * weight)
        
-    rand = random.randint(0,len(all_data)-1) 
-    return data[rand]
+    return random.choice(t)
    
 def iter_method(hist):
-    '''Return a random item bease on the weight in hist, this method
-    adds weight one by one till the total bigger than the random number 
+    '''Chooses a random word from a histogram.
 
-    hist: a dictionary of item and item's weights
+    The probability of each word is proportional to its frequency.
 
     returns: value in dist's key
     '''
-    total = sum(hist.values()) 
-    rand = random.randint(1,total)
-      
-    cur_total = 0
-    for value, weight in hist.items(): 
-        cur_total += weight
-        if rand <= cur_total:
-            return value
+    values = []
+    weights = []
+    total_wigt = 0
+
+    # make a list of values and a list of cumulative frequencies
+    for value, weight in hist.items():
+        total_wigt += weight
+        values.append(value)
+        weights.append(total_wigt)
+
+    # choose a random value and find its location in the cumulation list
+    rand = random.randint(0, total_wigt-1)
+    index = bisect(weights, rand)
+    return values[index]

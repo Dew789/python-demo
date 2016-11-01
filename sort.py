@@ -39,10 +39,20 @@ def Shell_sort(t):
 	return t
 
 # Selection Sort
-def Selection_sort():
+def Selection_sort(t):
+	length = len(t)
+	for i in range(length):
+		min_pos = i
+		for j in range(i+1, length):
+			if t[j] < t[min_pos]:
+				min_pos = j
+		t[i], t[min_pos] = t[min_pos], t[i]
+
+	return t
+
+# Merge Sort
+def Merge_sort():
 	pass
-
-
 
 
 if __name__ == '__main__':
@@ -52,5 +62,5 @@ if __name__ == '__main__':
 	print('Data ready')
 
 	start = time()
-	p = Shell_sort(a)
+	p = Bubble_sort(a)
 	print(time()-start)

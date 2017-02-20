@@ -1,0 +1,94 @@
+1.数字的四舍五入
+# round(value, ndigits)
+"""
+当一个值刚好在两个边界的中间的时候， round 函数返回离它最近的偶数。 也就是说，
+对1.5或者2.5的舍入运算都会得到2。
+传给 round() 函数的 ndigits 参数可以是负数，这种情况下， 舍入运算会作用在十位、
+百位、千位等上面
+"""
+
+2.执行精确的浮点数运算
+"""
+初看起来，上面的代码好像有点奇怪，比如我们用字符串来表示数字。 然而， Decimal
+对象会像普通浮点数一样的工作(支持所有的常用数学运算)。
+"""
+# >>> from decimal import Decimal
+>>> a = Decimal('4.2')
+>>> b = Decimal('2.1')
+>>> a + b
+Decimal('6.3')
+>>> print(a + b)
+6.3
+>>> (a + b) == Decimal('6.3')
+True
+# 控制精度
+>>> from decimal import localcontext
+>>> a = Decimal('1.3')
+>>> b = Decimal('1.7')
+>>> print(a / b)
+0.7647058823529411764705882353
+>>> with localcontext() as ctx:
+... ctx.prec = 3
+... print(a / b)
+...
+0.765
+# 大数与小数相加
+>>> nums = [1.23e+18, 1, -1.23e+18]
+>>> sum(nums) # Notice how 1 disappears
+0.0
+>>> import math
+>>> math.fsum(nums)
+1.0
+
+3.数字的格式化输出
+#格式化输出format() 
+说明：'[<>^]?width[,]?(.digits)?'
+
+4.二八十六进制整数
+#bin() , oct() 或hex()或format()
+整数是有符号的，所以如果你在处理负数的话，输出结果会包含一个负号
+>>> x = -1234
+>>> format(x, 'b')
+'-10011010010'
+>>> format(x, 'x')
+'-4d2'
+>>>
+如果你想产生一个无符号值，你需要增加一个指示最大位长度的值。比如为了显示32位
+的值，可以像下面这样写
+>>> x = -1234
+>>> format(2**32 + x, 'b')
+'11111111111111111111101100101110'
+>>> format(2**32 + x, 'x')
+'fffffb2e'
+使用python改变文件权限
+>>> import os
+>>> os.chmod('script.py', 0755)
+
+5.字节到大整数的打包与解包
+字节顺序规则(little或big)仅仅指定了构建整数时的字节的低位高位排列方式。 我们从下
+面精心构造的16进制数的表示中可以很容易的看出来
+>>> x = 0x01020304
+>>> x.to_bytes(4, 'big')
+b'\x01\x02\x03\x04'
+>>> x.to_bytes(4, 'little')
+b'\x04\x03\x02\x01'
+>>>
+如果你试着将一个整数打包为字节字符串，那么它就不合适了，你会得到一个错误。 如
+果需要的话，你可以使用 int.bit_length() 方法来决定需要多少字节位来存储这个值。
+>>> x = 523 ** 23
+>>> x
+335381300113661875107536852714019056160355655333978849017944067
+>>> x.to_bytes(16, 'little')
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+OverflowError: int too big to convert
+>>> x.bit_length()
+208
+>>> nbytes, rem = divmod(x.bit_length(), 8)
+>>> if rem:
+... nbytes += 1
+...
+>>>
+>>> x.to_bytes(nbytes, 'little')
+b'\x03X\xf1\x82iT\x96\xac\xc7c\x16\xf3\xb9\xcf...\xd0'
+>>>

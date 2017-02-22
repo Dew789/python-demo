@@ -92,3 +92,164 @@
     >>> x.to_bytes(nbytes, 'little')
     b'\x03X\xf1\x82iT\x96\xac\xc7c\x16\xf3\xb9\xcf...\xd0'
     >>>
+
+6.复数的数学运算
+    # 复数可以用使用函数 complex(real, imag) 或者是带有后缀j的浮点数来指定
+    >>> a = complex(2, 4)
+    >>> b = 3 - 5j
+    >>> a
+    (2+4j)
+    >>> b
+    (3-5j)
+    >>> a.real
+    2.0
+    >>> a.imag
+    4.0
+    >>> a.conjugate()
+    (2-4j)
+    # cmath、numpy支持复数的库
+
+7. 无穷大与NaN
+    # Python并没有特殊的语法来表示这些特殊的浮点值，但是可以使用 float() 来创建它们
+    >>> a = float('inf')
+    >>> b = float('-inf')
+    >>> c = float('nan')
+    >>> a
+    inf
+    >>> b
+    -inf
+    >>> c
+    nan
+    >>>
+    为了测试这些值的存在，使用 math.isinf() 和 math.isnan() 函数。比如：
+    >>> math.isinf(a)
+    True
+    >>> math.isnan(c)
+    True
+    >>>
+
+8.分数运算
+    # fractions 模块可以被用来执行包含分数的数学运算
+    >>> from fractions import Fraction
+    >>> a = Fraction(5, 4)
+    >>> b = Fraction(7, 16)
+    >>> print(a + b)
+    27/16
+    >>> print(a * b)
+    35/64
+    >>> # Getting numerator/denominator
+    >>> c = a * b
+    >>> c.numerator
+    35
+    >>> c.denominator
+    64
+    >>> # Converting to a float
+    >>> float(c)
+    0.546875
+    >>> # Limiting the denominator of a value
+    >>> print(c.limit_denominator(8))
+    4/7
+    >>> # Converting a float to a fraction
+    >>> x = 3.75
+    >>> y = Fraction(*x.as_integer_ratio())
+    >>> y
+    Fraction(15, 4)
+    >>>
+
+9.大型数组运算
+    """
+    特别的， NumPy 中的标量运
+    算(比如 ax * 2 或 ax + 10 )会作用在每一个元素上。 另外，当两个操作数都是数组的时
+    候执行元素对等位置计算，并最终生成一个新的数组。
+    """
+    >>> # Python lists
+    >>> x = [1, 2, 3, 4]
+    >>> y = [5, 6, 7, 8]
+    >>> x * 2
+    [1, 2, 3, 4, 1, 2, 3, 4]
+    >>> x + 10
+    Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+    TypeError: can only concatenate list (not "int") to list
+    >>> x + y
+    [1, 2, 3, 4, 5, 6, 7, 8]
+    >>> # Numpy arrays
+    >>> import numpy as np
+    >>> ax = np.array([1, 2, 3, 4])
+    >>> ay = np.array([5, 6, 7, 8])
+    >>> ax * 2
+    array([2, 4, 6, 8])
+    >>> ax + 10
+    array([11, 12, 13, 14])
+    >>> ax + ay
+    array([ 6, 8, 10, 12])
+    >>> ax * ay
+    array([ 5, 12, 21, 32])
+    >>>
+    """
+    1.NumPy 还为数组操作提供了大量的通用函数, sqrt(), cos()使用这些函数要比
+    循环数组并使用 math 模块中的函数执行计算要快的多.
+    2.底层实现中， NumPy 数组使用了C或者Fortran语言的机制分配内存。 也就是说，它们是
+    一个非常大的连续的并由同类型数据组成的内存区域。 所以，你可以构造一个比普通
+    Python列表大的多的数组。 比如，如果你想构造一个10,000*10,000的浮点数二维网格.
+    3.关于 NumPy 有一点需要特别的主意，那就是它扩展Python列表的索引功能 - 特别是对于
+    多维数组。 
+    """
+
+10.矩阵与线性代数运算
+    # numpy.matrix and numpy.linalg more details in http://www.numpy.org
+
+11.随机选择
+    # 从一个序列中随机的抽取一个元素random.choice()
+    # 提取n个不同元素的样本random.sample()
+    # 打乱序列中元素的顺序random.shuffle()
+    # 生成随机整数random.randint()
+    # 为了生成0到1范围内均匀分布的浮点数random.random()
+    # 获取N位随机位(二进制)的整数random.getrandbits() 
+    """
+    random 模块使用 Mersenne Twister算法来计算生成随机数。这是一个确定性算法， 但是
+    你可以通过 random.seed() 函数修改初始化种子
+    random.seed() # Seed based on system time or os.urandom()
+    random.seed(12345) # Seed based on integer given
+    random.seed(b'bytedata') # Seed based on byte data
+    比如， random.uniform() 计算均匀分布随机数， random.gauss() 计算正态分布随机数
+    在 random 模块中的函数不应该用在和密码学相关的程序中。 如果你确实需要类似的功
+    能，可以使用ssl模块中相应的函数。 比如， ssl.RAND_bytes() 可以用来生成一个安全的
+    随机字节序列。
+    """
+
+12. 基本的日期与时间转换
+    datetime模块(会自动处理瑞年)
+    # 表示时间段使用
+    from datetime import timedelta
+    # 表示时间点
+    >>> from datetime import datetime
+    >>> a = datetime(2012, 9, 23)
+    >>> print(a + timedelta(days=10))
+    2012-10-03 00:00:00
+    >>>
+    >>> b = datetime(2012, 12, 21)
+    >>> d = b - a
+    >>> d.days
+    89
+    >>> now = datetime.today()
+    >>> print(now)
+    2012-12-21 14:54:43.094063
+    >>> print(now + timedelta(minutes=10))
+    2012-12-21 15:04:43.094063
+    >>>
+    """
+    使用dateutil处理复杂的日期操作，比如处理时区，模糊时间范围，节假日计算等等
+    """
+
+13. 计算最后一个周五的日期
+    略
+
+14. 计算当前月份的日期范围
+    略
+
+15. 字符串转换为日期
+    # datetime.strptime， 性能较慢
+
+16. 结合时区的日期操作
+    # pytz utc时间

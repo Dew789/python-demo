@@ -1,4 +1,4 @@
-1.改变对象的字符串显示 #__str__，__repr__
+1.改变对象的字符串显示 #__str__, __repr__
     """
     1.__repr__() 方法返回一个实例的代码表示形式,通常跟交互解释器
       生成的代码一致
@@ -34,7 +34,7 @@
             if code == '':
                 code = 'ymd'
             fmt = _formats[code]
-        return fmt.format(d=self)
+            return fmt.format(d=self)
 
     >>> d = Date(2012, 12, 21)
     >>> format(d)
@@ -45,7 +45,6 @@
     'The date is 2012-12-21'
     >>> 'The date is {:mdy}'.format(d)
     'The date is 12/21/2012'
-    >>>
 
 3.让对象支持上下文管理协议 #支持with语句, __enter__, __close__
     """
@@ -192,4 +191,102 @@
     # 正确的使用super()函数
 
 8.子类中扩展property
+    class Person:
+    def __init__(self, name):
+        self.name = name
+    # Getter function
+    @property
+    def name(self):
+        return self._name
+    # Setter function
+    @name.setter
+    def name(self, value):
+        if not isinstance(value, str):
+            raise TypeError('Expected a string')
+        self._name = value
+    # Deleter function
+    @name.deleter
+    def name(self):
+        raise AttributeError("Can't delete attribute")
+    # 下面是一个示例类，它继承自Person并扩展了 name 属性的功能
+    class SubPerson(Person):
+        @property
+        def name(self):
+            print('Getting name')
+            return super().name
+        @name.setter
+        def name(self, value):
+            print('Setting name to', value)
+            super(SubPerson, SubPerson).name.__set__(self, value)
+        @name.deleter
+        def name(self):
+            print('Deleting name')
+            super(SubPerson, SubPerson).name.__delete__(self)
+    # 如果你仅仅只想扩展property的某一个方法
+    class SubPerson(Person):
+        @Person.name.getter
+        def name(self):
+            print('Getting name')
+            return super().name
+    # 描述符方法
+    # A descriptor
+    class String:
+        def __init__(self, name):
+        self.name = name
+    def __get__(self, instance, cls):
+        if instance is None:
+            return self
+            return instance.__dict__[self.name]
+    def __set__(self, instance, value):
+        if not isinstance(value, str):
+            raise TypeError('Expected a string')
+            instance.__dict__[self.name] = value
+    # A class with a descriptor
+    class Person:
+        name = String('name')
+        def __init__(self, name):
+        self.name = name
+    # Extending a descriptor with a property
+    class SubPerson(Person):
+    @property
+    def name(self):
+        print('Getting name')
+        return super().name
+    @name.setter
+    def name(self, value):
+        print('Setting name to', value)
+        super(SubPerson, SubPerson).name.__set__(self, value)
+    @name.deleter
+    def name(self):
+        print('Deleting name')
+        super(SubPerson, SubPerson).name.__delete__(self)
+
+9.创建新的类或实例属性
+    # Descriptor attribute for an integer type-checked attribute
+    class Integer:
+        def __init__(self, name):
+            self.name = name
+
+        def __get__(self, instance, cls):
+            if instance is None:
+                return self
+            else:
+                return instance.__dict__[self.name]
+
+        def __set__(self, instance, value):
+            if not isinstance(value, int):
+                raise TypeError('Expected an int')
+                instance.__dict__[self.name] = value
+
+        def __delete__(self, instance):
+            del instance.__dict__[self.name]
+
+    class Point:
+        x = Integer('x')
+        y = Integer('y')
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+
+10.使用延迟计算属性
     

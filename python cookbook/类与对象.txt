@@ -289,4 +289,65 @@
             self.y = y
 
 10.使用延迟计算属性
+    # @property实际上就是一种文件描述符
+    class lazyproperty:
+    def __init__(self, func):
+        self.func = func
+    def __get__(self, instance, cls):
+        if instance is None:
+            return self
+        else:
+            value = self.func(instance)
+            setattr(instance, self.func.__name__, value)
+            return value
+    def __set__(self, instance, value):
+        pass
+
+    import math
+    class Circle:
+        def __init__(self, radius):
+            self.radius = radius
+        @lazyproperty
+        def area(self):
+            print('Computing area')
+            return math.pi * self.radius ** 2
+        @lazyproperty
+        def perimeter(self):
+            print('Computing perimeter')
+            return 2 * math.pi * self.radius
+
+11.简化数据结构的初始化
+    # 你写了很多仅仅用作数据结构的类，不想写太多烦人的 __init__() 函数
+    class Structure1:
+        # Class variable that specifies expected fields
+        _fields = []
+        def __init__(self, *args):
+            if len(args) != len(self._fields):
+                raise TypeError('Expected {} arguments'.format(len(self._fields)))
+        # Set the arguments
+        for name, value in zip(self._fields, args):
+            setattr(self, name, value)
+
+12.定义接口或者抽象基类
+    from abc import ABCMeta, abstractmethod
+    class IStream(metaclass=ABCMeta):
+        @abstractmethod
+        def read(self, maxbytes=-1):
+            pass
+        @abstractmethod
+        def write(self, data):
+            pass
+
+    class SocketStream(IStream):
+        def read(self, maxbytes=-1):
+            pass
+        def write(self, data):
+            pass
+
+    def serialize(obj, stream):
+    if not isinstance(stream, IStream):
+        raise TypeError('Expected an IStream')
+        pass
+
+13.实现数据模型的类型约束
     

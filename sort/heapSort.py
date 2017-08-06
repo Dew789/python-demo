@@ -1,18 +1,19 @@
-def make_heap(t):
+def heapSort(t):
     length = len(t)
     minest_root = length // 2 - 1
-    for i in range(minest_root, -1 ,-1):
-        _sift_up(t, i, length)
+    for i in reversed(range(minest_root)):
+        _shif_down(t, i, length)
+    for j in reversed(range(length)):
+        t[j], t[0] = t[0], t[j]
+        _shif_down(t, 0, j)
 
-def _sift_up(t, root, end):
+def _shif_down(t, root, end):
     child = 2 * root + 1
-    temp = t[root]
     while child < end:
-        if child + 1 < end and t[child + 1] < child:
+        if child + 1 < end and t[child + 1] > t[child]:
             child += 1
-        if t[child] > t[root]:
+        if t[child] < t[root]:
             break
-        t[root] = t[child]
+        t[root], t[child] = t[child], t[root]
         root = child
         child = 2 * child + 1
-    t[root] = temp

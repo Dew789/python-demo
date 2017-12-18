@@ -6,7 +6,7 @@ class BinTNode(object):
         self.right = right
 
     def __str__(self):
-        return self.data
+        return str(self.data)
 
 class BinTree(object):
 
@@ -34,6 +34,7 @@ class BinTree(object):
                 curr_node.right = node
                 self._queue.append(node)
                 self._queue.pop(0)
+        return node
 
     def recur_preorder(self):
         root = self._root
@@ -114,3 +115,31 @@ class BinTree(object):
                 queue.append(node.left)
             if node.right is not None:
                 queue.append(node.right)
+
+    @staticmethod
+    def findLCA(root, n1, n2):
+        if not root :
+            return None
+        if (root is n1) or (root is n2):
+            return root
+        left = findLCA(root.left, n1, n2)
+        right = findLCA(root.right, n1, n2)
+        if left and right:
+            return root
+        else:
+            return (left or right)
+
+    def lowestCommonAncestor(self, node_1, node_2):
+        findLCA(self._root, node_1, node_2)
+
+if __name__ == '__main__':
+    t = BinTree()
+    for i in range(10):
+        if i == 3:
+            a = t.add(i)
+            continue
+        if i == 9:
+            b = t.add(i)
+            continue
+        t.add(i)
+    t.lowestCommonAncestor(a, b)

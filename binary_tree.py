@@ -1,14 +1,14 @@
-class BinTNode(object):
+class Node(object):
 
-    def __init__(self, data, left=None, right=None):
-        self.data = data
+    def __init__(self, cargo, left=None, right=None):
+        self.cargo = cargo
         self.left = left
         self.right = right
 
     def __str__(self):
-        return str(self.data)
+        return str(self.cargo)
 
-class BinTree(object):
+class Binary_tree(object):
 
     def __init__(self):
         self._root = None
@@ -21,7 +21,7 @@ class BinTree(object):
         return self._root
 
     def add(self, data):
-        node = BinTNode(data)
+        node = Node(data)
         if self._root is None:
             self._root = node
             self._queue.append(node)
@@ -36,28 +36,25 @@ class BinTree(object):
                 self._queue.pop(0)
         return node
 
-    def recur_preorder(self):
-        root = self._root
+    def recur_preorder(self, root):
         if root is None:
             return
         print(root)
-        recur_preorder(root.left)
-        recur_preorder(root.right)
+        self.recur_preorder(root.left)
+        self.recur_preorder(root.right)
 
-    def recur_inorder(self):
-        root = self._root
+    def recur_inorder(self, root):
         if root is None:
             return
-        recur_preorder(root.left)
+        self.recur_inorder(root.left)
         print(root)
-        recur_preorder(root.right)
+        self.recur_inorder(root.right)
 
-    def recur_postorder(self):
-        root = self._root
+    def recur_postorder(self, root):
         if root is None:
             return
-        recur_preorder(root.left)
-        recur_preorder(root.right)
+        self.recur_postorder(root.left)
+        self.recur_postorder(root.right)
         print(root)
 
     def preorder(self):
@@ -115,6 +112,21 @@ class BinTree(object):
                 queue.append(node.left)
             if node.right is not None:
                 queue.append(node.right)
+                
+    def reverse(self)
+        if self.root is None:
+            return
+        queue = []
+        queue.append(self.root)
+        while queue:
+            node = queue.pop(0)
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+            tmp = node.left
+            node.left = node.right
+            node.right = tmp
 
     @staticmethod
     def findLCA(root, n1, n2):
@@ -122,18 +134,18 @@ class BinTree(object):
             return None
         if (root is n1) or (root is n2):
             return root
-        left = findLCA(root.left, n1, n2)
-        right = findLCA(root.right, n1, n2)
+        left = Binary_tree.findLCA(root.left, n1, n2)
+        right = Binary_tree.findLCA(root.right, n1, n2)
         if left and right:
             return root
         else:
             return (left or right)
 
     def lowestCommonAncestor(self, node_1, node_2):
-        findLCA(self._root, node_1, node_2)
+        Binary_tree.findLCA(self._root, node_1, node_2)
 
 if __name__ == '__main__':
-    t = BinTree()
+    t = Binary_tree()
     for i in range(10):
         if i == 3:
             a = t.add(i)

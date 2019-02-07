@@ -1,21 +1,29 @@
 from random import randint
 
-def quick_sort(t, front, rear):
-    if front >= rear:
+def quick_sort(t, font, rear):
+    if font >= rear:
         return
+    pivot = t[font]
+    index = font;
+    for i in range(font, rear+1):
+        # have to skip pivot, we need it here
+        if i == font:
+            index += 1
+        if t[i] < pivot:
+            temp = t[index]
+            t[index] = t[i]
+            t[i] = temp
+            index += 1
+    # the index is always the bigger number than pivot
+    # but we have to swap the small one
+    if index > font:
+        index -= 1
+    temp = t[index]
+    t[font] = temp
+    t[index] = pivot
+    quick_sort(t, font, index)
+    quick_sort(t, index+1, rear)
 
-    l, r = front, rear
-    key = t[front]
-    while r > l:
-        while t[r] >= key and r > l:
-            r -= 1
-        t[l] = t[r]
-        while t[l] < key and r > l:
-            l += 1
-        t[r] = t[l]
-    t[r] = key
-    quick_sort(t, front, l-1)
-    quick_sort(t, r+1, rear)
 
 def randomized_quick_sort(t, front, rear):
     """ 
@@ -49,12 +57,12 @@ def randomized_quick_sort(t, front, rear):
 
 if __name__ == '__main__':
     t = []
-    for i in range(10000000):
+    for i in range(1000):
         t.append(i)
     from time import time
     start = time()
-    randomized_quick_sort(t, 0, 99)
+    randomized_quick_sort(t, 0, 999)
     print(time() - start)
     start = time()
-    quick_sort(t, 0, 99)
+    quick_sort(t, 0, 999)
     print(time()-start)

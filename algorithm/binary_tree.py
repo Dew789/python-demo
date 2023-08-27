@@ -8,7 +8,8 @@ class Node(object):
     def __str__(self):
         return str(self.cargo)
 
-class Binary_tree(object):
+
+class BinaryTree(object):
 
     def __init__(self):
         self._root = None
@@ -83,7 +84,7 @@ class Binary_tree(object):
             print(node)
             node = node.right
 
-    def posorder(self):
+    def pos_order(self):
         if self._root is None:
             return
         stack1 = []
@@ -93,9 +94,9 @@ class Binary_tree(object):
         while stack1:
             node = stack1.pop()
             if node.left:
-                stack1.append(left)
+                stack1.append(node.left)
             if node.right:
-                stack1.append(right)
+                stack1.append(node.right)
             stack2.append(node)
         for node in stack2[::-1]:
             print(node)
@@ -113,7 +114,7 @@ class Binary_tree(object):
             if node.right is not None:
                 queue.append(node.right)
                 
-    def reverse(self)
+    def reverse(self):
         if self.root is None:
             return
         queue = []
@@ -129,23 +130,24 @@ class Binary_tree(object):
             node.right = tmp
 
     @staticmethod
-    def findLCA(root, n1, n2):
+    def find_lca(root, n1, n2):
         if not root :
             return None
         if (root is n1) or (root is n2):
             return root
-        left = Binary_tree.findLCA(root.left, n1, n2)
-        right = Binary_tree.findLCA(root.right, n1, n2)
+        left = BinaryTree.find_lca(root.left, n1, n2)
+        right = BinaryTree.find_lca(root.right, n1, n2)
         if left and right:
             return root
         else:
-            return (left or right)
+            return left or right
 
-    def lowestCommonAncestor(self, node_1, node_2):
-        Binary_tree.findLCA(self._root, node_1, node_2)
+    def lowest_common_ancestor(self, node_1, node_2):
+        BinaryTree.find_lca(self._root, node_1, node_2)
+
 
 if __name__ == '__main__':
-    t = Binary_tree()
+    t = BinaryTree()
     for i in range(10):
         if i == 3:
             a = t.add(i)
@@ -154,4 +156,4 @@ if __name__ == '__main__':
             b = t.add(i)
             continue
         t.add(i)
-    t.lowestCommonAncestor(a, b)
+    t.lowest_common_ancestor(a, b)

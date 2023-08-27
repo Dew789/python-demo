@@ -1,3 +1,7 @@
+from time import sleep
+import asyncio
+
+
 def consumer():
     r = ''
     while True:
@@ -6,6 +10,7 @@ def consumer():
             return
         print('[CONSUMER] Consuming %s...' % n)
         r = '200 OK'
+
 
 def produce(c):
     c.send(None)
@@ -17,12 +22,6 @@ def produce(c):
         print('[PRODUCER] Consumer return: %s' % r)
     c.close()
 
-c = consumer()
-produce(c)
-
-
-from time import sleep
-import asyncio
 
 @asyncio.coroutine
 def hello():
@@ -31,7 +30,12 @@ def hello():
     r = yield from asyncio.sleep(0.1)
     print("Hello again!")
 
-loop = asyncio.get_event_loop()
-tasks = [hello(), hello(), hello()]
-loop.run_until_complete(asyncio.wait(tasks))
-loop.close()
+
+if __name__ == "__main__":
+    c = consumer()
+    produce(c)
+
+    loop = asyncio.get_event_loop()
+    tasks = [hello(), hello(), hello()]
+    loop.run_until_complete(asyncio.wait(tasks))
+    loop.close()

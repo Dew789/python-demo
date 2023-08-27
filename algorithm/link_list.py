@@ -4,8 +4,10 @@ class LNode(object):
         self.elem = elem
         self.next = next_
 
+
 class LinkedListUnderflow(ValueError):
     pass
+
 
 class LList(object):
     """Single Linked List"""
@@ -88,6 +90,7 @@ class LList(object):
             del p.next
             p = temp
         self._head = None
+
 
 if __name__ == '__main__':
     t = LList()

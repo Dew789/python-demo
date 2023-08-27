@@ -5,6 +5,7 @@
 要求时间复杂度为O(n)
 """
 
+
 def max_sub_array(t):
     """sum[i] = max(sum(i-1)+t[i], t[i])
     """
@@ -25,4 +26,3 @@ def max_sub_array(t):
 if __name__ == '__main__':
     test_case = [1, -2, 3, 10, -4, 7, 2, -5]
     max_sub_array(test_case)
-    

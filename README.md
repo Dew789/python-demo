@@ -1,1 +1,1 @@
-# useful example of python
+# python examples

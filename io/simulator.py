@@ -79,7 +79,7 @@ def simulate_audio_send(device_id, audio_file):
     data += depth                                        # 1            ,位置43
     data += channel                                      # 1
     data += audio                                        # 2048
-    data += bytes.fromhex(calculate_crc(data[9:2000]))   # 2
+    data += bytes.fromhex(calculate_crc(data[9:2093]))   # 2
     data += end                                          # 1
 
     while True:
@@ -92,7 +92,7 @@ def concurrent_audio_send(count):
     # simulate_audio_send("cafe%08d" % 1, r"D://48k_16bit_sin.pcm")
     pool = ThreadPoolExecutor(count)
     for i in range(1, count + 1):
-        pool.submit(simulate_audio_send, "cafe%08d" % i, r"D://48k_16bit_sin.pcm")
+        pool.submit(simulate_audio_send, "cafe%08d" % i, r"/usr/src/app/48k_16bit_sin.pcm")
 
     while True:
         time.sleep(10)

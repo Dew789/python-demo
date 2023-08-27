@@ -47,9 +47,9 @@ def calculate_crc(data):
     return "{:04x}".format(w_result)
 
 
-def simulate_audio_send(device_id, audio_file):
+def simulate_audio_send(ip, port, device_id, audio_file):
     sock_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock_client.connect(("10.40.152.198", 18090))
+    sock_client.connect((ip, port))
 
     head_data = bytes.fromhex("FCFCFCFC")                # 大小4
     version = bytes.fromhex("00")                        # 大小1
@@ -88,15 +88,15 @@ def simulate_audio_send(device_id, audio_file):
         time.sleep(0.02)
 
 
-def concurrent_audio_send(count):
+def concurrent_audio_send(ip, port, count):
     # simulate_audio_send("cafe%08d" % 1, r"D://48k_16bit_sin.pcm")
     pool = ThreadPoolExecutor(count)
     for i in range(1, count + 1):
-        pool.submit(simulate_audio_send, "cafe%08d" % i, r"/usr/src/app/48k_16bit_sin.pcm")
+        pool.submit(simulate_audio_send, ip, port, "cafe%08d" % i, r"/usr/src/app/48k_16bit_sin.pcm")
 
     while True:
         time.sleep(10)
 
 
 if __name__ == "__main__":
-    concurrent_audio_send(3)
+    concurrent_audio_send("10.40.152.198", 18090, 1)

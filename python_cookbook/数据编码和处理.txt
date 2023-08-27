@@ -1,0 +1,154 @@
+1.读写CSV数据
+    # 使用csv库文件
+    import csv
+    with open('stocks.csv') as f:
+        f_csv = csv.reader(f)
+        headers = next(f_csv)
+        for row in f_csv:
+        # Process row
+        ...
+    读取文件时可以使用namedtuple或dict来获取数据
+    写入csv文件的两种方法
+    with open('stocks.csv','w') as f:
+        f_csv = csv.writer(f)
+        f_csv.writerow(headers)
+        f_csv.writerows(rows)
+
+    with open('stocks.csv','w') as f:
+        f_csv = csv.DictWriter(f, headers)
+        f_csv.writeheader()
+        f_csv.writerows(rows)
+    #dict.update(genetator)
+
+2.读写JSON数据
+    # json.dumps()/json.loads()/json.dump()/json.load()
+    JSON编码支持的基本数据类型为 None ， bool ， int ， float 和 str ， 以及包含这
+    些类型数据的lists，tuples和dictionaries对于dictionaries，keys需要是字符串类型(字典
+    中任何非字符串类型的key在编码时会先转换为字符串),如果你想要创建其他类型的对象，
+    可以给 json.loads() 传递object_pairs_hook或object_hook参数
+
+3.解析简单的XML数据
+    from xml.etree.ElementTree import parse
+
+4.增量式解析大型XML文件
+    使用迭代器和生成器
+    from xml.etree.ElementTree import iterparse
+
+5.将字典转换为XML
+    from xml.etree.ElementTree import Element
+
+    def dict_to_xml(tag, d):
+        '''
+        Turn a simple dict of key/value pairs into XML
+        '''
+        elem = Element(tag)
+        for key, val in d.items():
+            child = Element(key)
+            child.text = str(val)
+            elem.append(child)
+        return elem
+
+6.解析和修改XML
+    使用 xml.etree.ElementTree 模块可以很容易的处理这些任务
+
+7.利用命名空间解析XML文档
+    可以通过将命名空间处理逻辑包装为一个工具类来简化
+    class XMLNamespaces:
+        def __init__(self, **kwargs):
+            self.namespaces = {}
+        for name, uri in kwargs.items():
+            self.register(name, uri)
+        def register(self, name, uri):
+            self.namespaces[name] = '{'+uri+'}'
+        def __call__(self, path):
+            return path.format_map(self.namespaces)
+    如果你要处理的XML文本除了要使用到其他高级XML特性外，还要使用到命
+    名空间， 建议你最好是使用 lxml 函数库来代替 ElementTree
+
+8.与关系型数据库的交互
+    Python中表示多行数据的标准方式是一个由元组构成的序列。例如:
+    stocks = [
+        ('GOOG', 100, 490.1),
+        ('AAPL', 50, 545.75),
+        ('FB', 150, 7.45),
+        ('HPQ', 75, 33.2),
+        ]
+
+9. 编码和解码十六进制数
+    # binascii
+    >>> # Initial byte string
+    >>> s = b'hello'
+    >>> # Encode as hex
+    >>> import binascii
+    >>> h = binascii.b2a_hex(s)
+    >>> h
+    b'68656c6c6f'
+    >>> # Decode back to bytes
+    >>> binascii.a2b_hex(h)
+    b'hello'
+    >>>
+    # base64
+    >>> import base64
+    >>> h = base64.b16encode(s)
+    >>> h
+    b'68656C6C6F'
+    >>> base64.b16decode(h)
+    b'hello'
+    >>>
+        函数 base64.b16decode() 和 base64.b16encode() 只能操作大写
+    形式的十六进制字母， 而 binascii 模块中的函数大小写都能处理。
+
+10.编码解码Base64数据
+    base64 模块中有两个函数 b64encode() and b64decode()
+    >>> # Some byte data
+    >>> s = b'hello'
+    >>> import base64
+    >>> # Encode as Base64
+    >>> a = base64.b64encode(s)
+    >>> a
+    b'aGVsbG8='
+    >>> # Decode from Base64
+    >>> base64.b64decode(a)
+    b'hello'
+    >>>
+    Base64编码仅仅用于面向字节的数据比如字节字符串和字节数组
+    当解码Base64的时候，字节字符串和Unicode文本都可以作为参数
+
+11.读写二进制数组数据
+    可以使用 struct 模块处理二进制数据from struct import Struct
+
+    def write_records(records, format, f):
+        '''
+        Write a sequence of tuples to a binary file of structures.
+        '''
+        record_struct = Struct(format)
+        for r in records:
+            f.write(record_struct.pack(*r))
+    
+    # Example
+    if __name__ == '__main__':
+        records = [ (1, 2.3, 4.5),
+            (6, 7.8, 9.0),
+            (12, 13.4, 56.7) ]
+        with open(r'C:\Users\zhanghang\Desktop\data.b', 'wb') as f:
+            write_records(records, '<idd', f)
+
+    def read_records(format, f):
+        record_struct = Struct(format)
+        chunks = iter(lambda: f.read(record_struct.size), b'')
+        return (record_struct.unpack(chunk) for chunk in chunks)
+
+    def unpack_records(format, data):
+        record_struct = Struct(format)
+        return (record_struct.unpack_from(data, offset)
+        for offset in range(0, len(data), record_struct.size))
+            pass
+    # unpack_from节省了大量的切片操作
+
+12.读取嵌套和可变长二进制数据
+    # Need to add
+    
+
+13 数据的累加与统计操作
+    对于任何涉及到统计、时间序列以及其他相关技术的数据分析问题，都可以考虑使用
+    Pandas库

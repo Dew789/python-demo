@@ -1,0 +1,353 @@
+1.改变对象的字符串显示 #__str__, __repr__
+    """
+    1.__repr__() 方法返回一个实例的代码表示形式,通常跟交互解释器
+      生成的代码一致
+    2.!r 格式化代码指明输出使用 __repr__() 来代替默认的 __str__()，
+    """
+    3.__repr__() 生成的文本字符串标准做法是需要让 eval(repr(x)) == x 为真，
+    如果实在不能这样子做，应该创建一个有用的文本表示，并使用 < 和 > 括起来。
+    <_io.TextIOWrapper name='file.dat' mode='r' encoding='UTF-8'>
+    4.如果 __str__() 没有被定义，那么就会使用 __repr__() 来代替输出
+    class Pair:
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+
+        def __repr__(self):
+            return 'Pair({0.x!r}, {0.y!r})'.format(self)
+
+        def __str__(self):
+            return '({0.x!s}, {0.y!s})'.format(self)
+
+2.自定义字符串的格式化 #__format__
+    _formats = {
+    'ymd' : '{d.year}-{d.month}-{d.day}',
+    'mdy' : '{d.month}/{d.day}/{d.year}',
+    'dmy' : '{d.day}/{d.month}/{d.year}'
+    }
+    class Date:
+        def __init__(self, year, month, day):
+            self.year = year
+            self.month = month
+            self.day = day
+        def __format__(self, code):
+            if code == '':
+                code = 'ymd'
+            fmt = _formats[code]
+            return fmt.format(d=self)
+
+    >>> d = Date(2012, 12, 21)
+    >>> format(d)
+    '2012-12-21'
+    >>> format(d, 'mdy')
+    '12/21/2012'
+    >>> 'The date is {:ymd}'.format(d)
+    'The date is 2012-12-21'
+    >>> 'The date is {:mdy}'.format(d)
+    'The date is 12/21/2012'
+
+3.让对象支持上下文管理协议 #支持with语句, __enter__, __close__
+    """
+    编写上下文管理器的主要原理是你的代码会放到 with 语句块中执行。 当出现 with 语句
+    的时候，对象的 __enter__() 方法被触发， 它返回的值(如果有的话)会被赋值给 as 声明
+    的变量。然后， with 语句块里面的代码开始执行。 最后， __exit__() 方法被触发进行
+    清理工作。不管 with 代码块中发生什么，上面的控制流都会执行完，就算代码块中发生了
+    异常也是一样的。
+    """
+    from socket import socket, AF_INET, SOCK_STREAM
+    class LazyConnection:
+        def __init__(self, address, family=AF_INET, type=SOCK_STREAM):
+            self.address = address
+            self.family = family
+            self.type = type
+            self.sock = None
+
+        def __enter__(self):
+            if self.sock is not None:
+                raise RuntimeError('Already connected')
+                self.sock = socket(self.family, self.type)
+            self.sock.connect(self.address)
+            return self.sock
+
+        def __exit__(self, exc_ty, exc_val, tb):
+            self.sock.close()
+            self.sock = None
+
+    from functools import partial
+    conn = LazyConnection(('www.python.org', 80))
+    # Connection closed
+    with conn as s:
+        # conn.__enter__() executes: connection open
+        s.send(b'GET /index.html HTTP/1.0\r\n')
+        s.send(b'Host: www.python.org\r\n')
+        s.send(b'\r\n')
+        resp = b''.join(iter(partial(s.recv, 8192), b''))
+        # conn.__exit__() executes: connection closed
+
+4.创建大量对象时节省内存方法 # __slots__
+    """
+    当你定义 __slots__ 后，Python就会为实例使用一种更加紧凑的内部表示。 实例通过一
+    个很小的固定大小的数组来构建，而不是为每个实例定义一个字典，这跟元组或列表很类
+    似,使用slots一个不好的地方就是我们不能再给实例添加新的属性了，只能使用在 
+    __slots__ 中定义的那些属性名
+    """
+    class Date:
+        __slots__ = ['year', 'month', 'day']
+        def __init__(self, year, month, day):
+            self.year = year
+            self.month = month
+            self.day = day
+
+5.在类中封装属性名 # __method(attribute), _method(attribute)
+    """
+    Python程序员不去依赖语言特性去封装数据，而是通过遵循一定的属性和方法命名规约
+    来达到这个效果。
+    1.第一个约定是任何以单下划线_开头的名字都应该是内部实现
+    2.使用双下划线开始会导致访问名称变成其他形式
+    单下划线作为后缀可以防止一个变量和某个保留关键字冲突
+    lambda_ = 2.0 # Trailing _ to avoid clash with lambda keyword
+    """
+    class B:
+        def __init__(self):
+            self.__private = 0
+        def __private_method(self):
+            pass
+        def public_method(self):
+            pass
+        self.__private_method()
+    class C(B):
+        def __init__(self):
+            super().__init__()
+            self.__private = 1 # Does not override B.__private
+        # Does not override B.__private_method()
+        def __private_method(self):
+            pass
+    """
+    使用双下划线开始会导致访问名称变成其他形式。 比如，在前面的类B中，私有属性会被
+    分别重命名为 _B__private 和 _B__private_method 。 这时候你可能会问这样重命名的目
+    的是什么，答案就是继承——这种属性通过继承是无法被覆盖的
+    """
+
+6.创建可管理的属性 # @property 动态计算属性
+    """
+    通过设置self.first_name ，自动调用 setter 方法， 这个方法里面会进行参数的检查，否则就是
+    直接访问 self._first_name 了。
+    """
+    class Person:
+        def __init__(self, first_name):
+            self.first_name = first_name
+    
+        # Getter function
+        @property
+        def first_name(self):
+            return self._first_name
+    
+        # Setter function
+        @first_name.setter
+        def first_name(self, value):
+            if not isinstance(value, str):
+                raise TypeError('Expected a string')
+            self._first_name = value
+    
+        # Deleter function (optional)
+        @first_name.deleter
+        def first_name(self):
+            raise AttributeError("Can't delete attribute")
+    # 另一种定义方法
+    class Person:
+        def __init__(self, first_name):
+            self.first_name = first_name
+
+        @property
+        def first_name(self):
+            return self._first_name
+
+        @first_name.setter
+        def first_name(self, value):
+            self._first_name = value
+
+7.调用父类方法 # super()
+    # python继承MRO列表的构造是通过一个C3线性化算法来实现的
+    class A:
+        def spam(self):
+            print('A.spam')
+    class B(A):
+        def spam(self):
+            print('B.spam')
+            super().spam() # Call parent spam()
+    # super() 的另外一个常见用法出现在覆盖Python特殊方法的代码中
+    class Proxy:
+        def __init__(self, obj):
+            self._obj = obj
+        # Delegate attribute lookup to internal obj
+        def __getattr__(self, name):
+            return getattr(self._obj, name)
+        # Delegate attribute assignment
+        def __setattr__(self, name, value):
+            if name.startswith('_'):
+                super().__setattr__(name, value) # Call original __setattr__
+            else:
+                setattr(self._obj, name, value)
+    # 正确的使用super()函数
+
+8.子类中扩展property
+    class Person:
+    def __init__(self, name):
+        self.name = name
+    # Getter function
+    @property
+    def name(self):
+        return self._name
+    # Setter function
+    @name.setter
+    def name(self, value):
+        if not isinstance(value, str):
+            raise TypeError('Expected a string')
+        self._name = value
+    # Deleter function
+    @name.deleter
+    def name(self):
+        raise AttributeError("Can't delete attribute")
+    # 下面是一个示例类，它继承自Person并扩展了 name 属性的功能
+    class SubPerson(Person):
+        @property
+        def name(self):
+            print('Getting name')
+            return super().name
+        @name.setter
+        def name(self, value):
+            print('Setting name to', value)
+            super(SubPerson, SubPerson).name.__set__(self, value)
+        @name.deleter
+        def name(self):
+            print('Deleting name')
+            super(SubPerson, SubPerson).name.__delete__(self)
+    # 如果你仅仅只想扩展property的某一个方法
+    class SubPerson(Person):
+        @Person.name.getter
+        def name(self):
+            print('Getting name')
+            return super().name
+    # 描述符方法
+    # A descriptor
+    class String:
+        def __init__(self, name):
+        self.name = name
+    def __get__(self, instance, cls):
+        if instance is None:
+            return self
+            return instance.__dict__[self.name]
+    def __set__(self, instance, value):
+        if not isinstance(value, str):
+            raise TypeError('Expected a string')
+            instance.__dict__[self.name] = value
+    # A class with a descriptor
+    class Person:
+        name = String('name')
+        def __init__(self, name):
+        self.name = name
+    # Extending a descriptor with a property
+    class SubPerson(Person):
+    @property
+    def name(self):
+        print('Getting name')
+        return super().name
+    @name.setter
+    def name(self, value):
+        print('Setting name to', value)
+        super(SubPerson, SubPerson).name.__set__(self, value)
+    @name.deleter
+    def name(self):
+        print('Deleting name')
+        super(SubPerson, SubPerson).name.__delete__(self)
+
+9.创建新的类或实例属性
+    # Descriptor attribute for an integer type-checked attribute
+    class Integer:
+        def __init__(self, name):
+            self.name = name
+
+        def __get__(self, instance, cls):
+            if instance is None:
+                return self
+            else:
+                return instance.__dict__[self.name]
+
+        def __set__(self, instance, value):
+            if not isinstance(value, int):
+                raise TypeError('Expected an int')
+                instance.__dict__[self.name] = value
+
+        def __delete__(self, instance):
+            del instance.__dict__[self.name]
+
+    class Point:
+        x = Integer('x')
+        y = Integer('y')
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+
+10.使用延迟计算属性
+    # @property实际上就是一种文件描述符
+    class lazyproperty:
+    def __init__(self, func):
+        self.func = func
+    def __get__(self, instance, cls):
+        if instance is None:
+            return self
+        else:
+            value = self.func(instance)
+            setattr(instance, self.func.__name__, value)
+            return value
+    def __set__(self, instance, value):
+        pass
+
+    import math
+    class Circle:
+        def __init__(self, radius):
+            self.radius = radius
+        @lazyproperty
+        def area(self):
+            print('Computing area')
+            return math.pi * self.radius ** 2
+        @lazyproperty
+        def perimeter(self):
+            print('Computing perimeter')
+            return 2 * math.pi * self.radius
+
+11.简化数据结构的初始化
+    # 你写了很多仅仅用作数据结构的类，不想写太多烦人的 __init__() 函数
+    class Structure1:
+        # Class variable that specifies expected fields
+        _fields = []
+        def __init__(self, *args):
+            if len(args) != len(self._fields):
+                raise TypeError('Expected {} arguments'.format(len(self._fields)))
+        # Set the arguments
+        for name, value in zip(self._fields, args):
+            setattr(self, name, value)
+
+12.定义接口或者抽象基类
+    from abc import ABCMeta, abstractmethod
+    class IStream(metaclass=ABCMeta):
+        @abstractmethod
+        def read(self, maxbytes=-1):
+            pass
+        @abstractmethod
+        def write(self, data):
+            pass
+
+    class SocketStream(IStream):
+        def read(self, maxbytes=-1):
+            pass
+        def write(self, data):
+            pass
+
+    def serialize(obj, stream):
+    if not isinstance(stream, IStream):
+        raise TypeError('Expected an IStream')
+        pass
+
+13.实现数据模型的类型约束
+    

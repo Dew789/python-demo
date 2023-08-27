@@ -1,0 +1,324 @@
+1.作为客户端与HTTP服务交互
+    # request
+    开发过程中测试HTTP客户端代码常常是很令人沮丧的，因为所有棘手的细节问题都需
+    要考虑（例如cookies、认证、HTTP头、编码方式等）。要完成这些任务，考虑使用
+    httpbin服务（http://httpbin.org）
+
+2.创建TCP服务器
+    # 实现一个服务器，通过TCP协议和客户端通信。
+    from socketserver import BaseRequestHandler, TCPServer
+    class EchoHandler(BaseRequestHandler):
+        def handle(self):
+            print('Got connection from', self.client_address)
+        while True:
+            msg = self.request.recv(8192)
+        if not msg:
+            break
+        self.request.send(msg)
+
+    if __name__ == '__main__':
+        serv = TCPServer(('', 20000), EchoHandler)
+        serv.serve_forever()
+    创建的为单线程服务器，如果你想要并发操作，可以实例化一个
+    ForkingTCPServer或ThreadingTCPServer对象或自行创建进程
+
+3.创建UDP服务器
+    # 基于UDP协议的服务器来与客户端通信
+    from socketserver import BaseRequestHandler, UDPServer
+    import time
+    class TimeHandler(BaseRequestHandler):
+        def handle(self):
+            print('Got connection from', self.client_address)
+            # Get message and client socket
+            msg, sock = self.request
+            resp = time.ctime()
+            sock.sendto(resp.encode('ascii'), self.client_address)
+
+    if __name__ == '__main__':
+        serv = UDPServer(('', 20000), TimeHandler)
+        serv.serve_forever()
+    直接使用 socket 来是想一个UDP服务器也不难，下面是一个例子：
+    from socket import socket, AF_INET, SOCK_DGRAM
+    import time
+    def time_server(address):
+        sock = socket(AF_INET, SOCK_DGRAM)
+        sock.bind(address)
+        while True:
+            msg, addr = sock.recvfrom(8192)
+            print('Got message from', addr)
+            resp = time.ctime()
+            sock.sendto(resp.encode('ascii'), addr)
+
+    if __name__ == '__main__':
+        time_server(('', 20000))
+
+4.通过CIDR地址生成对应的IP地址集
+    # ipaddress
+    1.计算CIDR网络所有代表的IP,获取索引，检查网络成员
+    2.一个IP地址和网络地址能通过一个IP接口来指定
+
+5.创建一个简单的REST接口
+    import cgi
+    import time
+    
+    def notfound_404(environ, start_response):
+        start_response('404 Not Found', [ ('Content-type', 'text/plain') ])
+        return [b'Not Found']
+    
+    class PathDispatcher:
+        def __init__(self):
+            self.pathmap = { }
+    
+        def __call__(self, environ, start_response):
+            path = environ['PATH_INFO']
+            params = cgi.FieldStorage(environ['wsgi.input'], environ=environ)
+            method = environ['REQUEST_METHOD'].lower()
+            environ['params'] = { key: params.getvalue(key) for key in params }
+            handler = self.pathmap.get((method,path), notfound_404)
+            return handler(environ, start_response)
+    
+        def register(self, method, path, function):
+            self.pathmap[method.lower(), path] = function
+            return function
+    
+    _hello_resp = '''\
+                    <html>
+                    <head>
+                    <title>Hello {name}</title>
+                    </head>
+                    <body>
+                    <h1>Hello {name}!</h1>
+                    </body>
+                    </html>'''
+    
+    def hello_world(environ, start_response):
+        start_response('200 OK', [ ('Content-type','text/html')])
+        params = environ['params']
+        resp = _hello_resp.format(name=params.get('name'))
+        yield resp.encode('utf-8')
+    
+    _localtime_resp = '''\
+                        <html>
+                        <time>
+                        <year>{t.tm_year}</year>
+                        <month>{t.tm_mon}</month>
+                        <day>{t.tm_mday}</day>
+                        <hour>{t.tm_hour}</hour>
+                        <minute>{t.tm_min}</minute>
+                        <second>{t.tm_sec}</second>
+                        </time>
+                        </html>'''
+    
+    def localtime(environ, start_response):
+        start_response('200 OK', [ ('Content-type', 'application/html') ])
+        resp = _localtime_resp.format(t=time.localtime())
+        yield resp.encode('utf-8')
+    
+    if __name__ == '__main__':
+        from wsgiref.simple_server import make_server
+        # Create the dispatcher and register functions
+        dispatcher = PathDispatcher()
+        dispatcher.register('GET', '/hello', hello_world)
+        dispatcher.register('GET', '/localtime', localtime)
+        # Launch a basic server
+        httpd = make_server('', 8080, dispatcher)
+        print('Serving on port 8080...')
+        httpd.serve_forever()
+
+6.通过XML-RPC实现简单的远程调用
+    from xmlrpc.server import SimpleXMLRPCServer
+
+    class KeyValueServer:
+        _rpc_methods_ = ["get", "set", "delete", "exists", "keys"]
+    
+        def __init__(self, address):
+            self._data = {} 
+            self._serv = SimpleXMLRPCServer(address, allow_none=True) 
+            for name in self._rpc_methods_:
+                self._serv.register_function(getattr(self, name))
+    
+        def get(self, name):
+            return self._data[name]
+    
+        def set(self, name, value):
+            self._data[name] = value
+    
+        def delete(self, name):
+            del self._data[name]
+    
+        def exists(self, name):
+            return name in self._data
+    
+        def keys(self):
+            return list(self._data)
+    
+        def serve_forever(self):
+            self._serv.serve_forever()
+        
+    if __name__ == "__main__":
+        kvserv = KeyValueServer(("", 15000)) 
+        kvserv.serve_forever()
+    
+    >>> from xmlrpc.client import ServerProxy
+    >>> s = ServerProxy('http://localhost:15000', allow_none=True)
+    >>> s.set('foo', 'bar')
+    >>> s.set('spam', [1, 2, 3])
+    >>> s.keys()
+    ['spam', 'foo']
+    >>> s.get('foo')
+    'bar'
+    >>> s.get('spam')
+    [1, 2, 3]
+    >>> s.delete('spam')
+    >>> s.exists('spam')
+    False
+    >>>
+
+7.在不同的Python解释器之间交互
+    from multiprocessing.connection import Listener 
+    import traceback
+    
+    def echo_client(conn):
+        try:
+            while True:
+                msg = conn.recv() 
+                conn.send(msg)
+        except EOFError:
+            print("Connection closed")
+    
+    def echo_server(address, authkey):
+        serv = Listener(address, authkey=authkey) 
+        while True:
+            try:
+                client = serv.accept()
+                echo_client(client)
+            except Exception:
+                traceback.print_exc()
+                echo_server(("", 25000), authkey=b"peekaboo")
+    
+    if __name__ == '__main__':
+        echo_server(("", 25000), authkey=b"peekaboo")
+    
+    >>> from multiprocessing.connection import Client
+    >>> c = Client(('localhost', 25000), authkey=b'peekaboo')
+    >>> c.send('hello')
+    >>> c.recv()
+    'hello'
+    >>> c.send(42)
+    >>> c.recv()
+    42
+    >>> c.send([1, 2, 3, 4, 5])
+    >>> c.recv()
+    [1, 2, 3, 4, 5]
+    >>>
+
+8.实现远程方法调用
+    import pickle
+    from multiprocessing.connection import Listener 
+    from threading import Thread
+    
+    class RPCHandler:
+    
+        def __init__(self):
+            self._functions = { }
+        
+        def register_function(self, func):
+            self._functions[func.__name__] = func
+        
+        def handle_connection(self, connection):
+            try:
+                while True:
+                    # Receive a message 
+                    func_name, args, kwargs = pickle.loads(connection.recv())
+                    # Run the RPC and send a response 
+                    try:
+                        r = self._functions[func_name](*args,**kwargs)
+                        connection.send(pickle.dumps(r))
+                    except Exception as e:
+                        connection.send(pickle.dumps(e))
+            except EOFError:
+                pass
+
+    def rpc_server(handler, address, authkey):
+        sock = Listener(address, authkey=authkey)
+        while True:
+            client = sock.accept()
+            t = Thread(target=handler.handle_connection, args=(client,))
+            t.daemon = True
+            t.start()
+    
+    class RPCProxy:
+    
+        def __init__(self, connection):
+            self._connection = connection
+    
+        def __getattr__(self, name):
+            def do_rpc(*args, **kwargs):
+                self._connection.send(pickle.dumps((name, args, kwargs)))
+                result = pickle.loads(self._connection.recv()) 
+                if isinstance(result, Exception):
+                    raise result
+                return result
+            return do_rpc
+    
+    if __name__ == '__main__':
+        # Some remote functions 
+        def add(x, y):
+            return x + y
+    
+        def sub(x, y):
+            return x - y
+    
+        # Register with a handler
+        handler = RPCHandler() 
+        handler.register_function(add)
+        handler.register_function(sub)
+        # Run the server 
+        rpc_server(handler, ("localhost", 17000), authkey=b"peekaboo")
+    
+    >>> from multiprocessing.connection import Client
+    >>> c = Client(('localhost', 17000), authkey=b'peekaboo')
+    >>> proxy = RPCProxy(c)
+    >>> proxy.add(2, 3)
+
+9.简单的客户端认证
+    import hmac 
+    import os
+    
+    def client_authenticate(connection, secret_key):
+        """Authenticate client to a remote service.
+    
+        connection represents a network connection.
+        secret_key is a key known only to both client/server.
+    
+        """
+        message = connection.recv(32)
+        hash = hmac.new(secret_key, message) 
+        digest = hash.digest() 
+        connection.send(digest)
+    
+    def server_authenticate(connection, secret_key):
+        """Request client authentication."""
+        message = os.urandom(32)
+        connection.send(message) 
+        hash = hmac.new(secret_key, message) 
+        digest = hash.digest()
+        response = connection.recv(len(digest)) 
+        return hmac.compare_digest(digest,response)
+
+10.在网络服务中加入SSL
+11.进程间传递Socket文件描述符
+12.理解事件驱动的IO
+    
+13.发送与接收大型数组
+    def send_from(arr, dest):
+        view = memoryview(arr).cast("B")
+        while len(view):
+            nsent = dest.send(view)
+            view = view[nsent:]
+
+    def recv_into(arr, source):
+        view = memoryview(arr).cast("B") 
+        while len(view):
+            nrecv = source.recv_into(view) 
+            view = view[nrecv:]

@@ -5,7 +5,13 @@ import uuid
 from rocketmq.client import Producer, Message
 from concurrent.futures import ThreadPoolExecutor
 
-
+"""
+  wget https://github.com/apache/rocketmq-client-cpp/releases/download/2.0.0/rocketmq-client-cpp-2.0.0-centos7.x86_64.rpm
+  sudo rpm -ivh rocketmq-client-cpp-2.0.0-centos7.x86_64.rpm
+  find / -name librocketmq.so
+  export LD_LIBRARY_PATH=/usr/lib/librocketmq.so:$LD_LIBRARY_PATH
+  sudo ldconfig
+  """
 def send_message(url):
     producer = Producer("rocketMQ-test-group")
     producer.set_name_server_address(url)

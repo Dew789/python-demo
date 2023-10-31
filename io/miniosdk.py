@@ -25,7 +25,30 @@ def set_policy(bucket_name):
 
 def download_folder(bucket_name, folder_path, local_path):
     """
-        # 替换为你的MinIO服务器地址、访问密钥、密钥和桶名
+    ###服务器安装minio客户端
+    curl https://dl.min.io/client/mc/release/linux-amd64/mc \
+      --create-dirs \
+      -o $HOME/minio-binaries/mc
+
+    chmod +x $HOME/minio-binaries/mc
+    export PATH=$PATH:$HOME/minio-binaries/
+
+    ###
+
+    ## 设置连接minio服务 别名 为fengdian
+    mc alias set fengdian http://fengdian-minio.gyznts.com  minioadmin huOS9erJnXts
+
+
+    # 查看fengdian 下的桶 和 桶下文件
+    mc ls fengdian/
+    mc ls fengdian/ark-media/web
+
+    # copy fengdian 下的ark-media 桶下的文件 到/opt/下 需要递归参数 --recursive
+    mc cp  --recursive fengdian/ark-media/web  /opt/
+    """
+
+    """
+    # 替换为你的MinIO服务器地址、访问密钥、密钥和桶名
     minio_server = "fengdian-minio.gyznts.com"
     access_key = "minioadmin"
     secret_key = "huOS9erJnXts"

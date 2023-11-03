@@ -73,4 +73,3 @@ def download_folder(bucket_name, folder_path, local_path):
 
 if __name__ == "__main__":
     pass
-

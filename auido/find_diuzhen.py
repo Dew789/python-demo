@@ -4,31 +4,43 @@ import matplotlib.pyplot as plt
 import array
 import os
 
-def readPCM(fileName):
-    file = open(fileName, 'rb')
+
+def find_diuzhen(file_name):
+    x = readPCM(file_name)
+    b, a = butter(8, [1000 / (48000 / 2), 20000 / (48000 / 2)], 'bandpass')
+    x = filtfilt(b, a, x)
+
+    x = np.diff(x, n=2)
+    if (x > 0.00075).sum() > 10:
+        return file_name + "," + "loss: %s" % (x > 0.00075).sum()
+    else:
+        return file_name + "," + "no loss"
+
+
+def readPCM(file_name):
+    file = open(file_name, 'rb')
     pcm_data = array.array('h')
-    size = int(os.path.getsize(fileName) / pcm_data.itemsize)
+    size = int(os.path.getsize(file_name) / pcm_data.itemsize)
     pcm_data.fromfile(file, size)
     file.close()
-    return np.array(pcm_data)/ 32768
+    return np.array(pcm_data) / 32768
 
 # import pdb;pdb.set_trace()
-x = readPCM(r'C:\Users\leiwang32\Desktop\2023-10-18~14_16_27.pcm')
 # x = readPCM(r'C:\Users\leiwang32\Desktop\2023-10-18~19_04_12.pcm')
 # x = readPCM(r'C:\Users\leiwang32\Desktop\2023-10-18~00_00_59.pcm')
 # x = readPCM(r'C:\Users\leiwang32\Desktop\2023-10-19~12_30_15.pcm')
 # x = readPCM(r'C:\Users\leiwang32\Desktop\2023-10-18~15_30_57 (2).pcm')
-b, a = butter(8, [1000 / (48000 / 2),20000 / (48000 / 2)], 'bandpass')
+# b, a = butter(8, [1000 / (48000 / 2),20000 / (48000 / 2)], 'bandpass')
 # b, a = butter(8, 2000 / (sr / 2), 'highpass')
-x = filtfilt(b, a, x) #signal为要过滤的信号
+# x = filtfilt(b, a, x) #signal为要过滤的信号
 
 # x1 = np.roll(x,-1)
 # std_all = np.std(x)
 # print(f'std: {std_all}')
 ##二阶差分
-x = np.diff(x, n=2)
-if (x>0.00075).sum()  > 10:
-    print(f'丢帧:{(x>0.00075).sum()}')
+# x = np.diff(x, n=2)
+# if (x>0.00075).sum()  > 10:
+#     print(f'丢帧:{(x>0.00075).sum()}')
 # std_all = np.std(x)
 # print(f'std: {std_all}')
 # x = (x-np.min(x))/(np.max(x)-np.min(x))  # 最值归一化
@@ -85,3 +97,12 @@ if (x>0.00075).sum()  > 10:
 # plt.gcf().autofmt_xdate()
 
 # plt.show()
+
+
+if __name__ == "__main__":
+    with open(r"D:\株洲4g-429.csv", "w") as e:
+        for root, dirs, files in os.walk(r"D:\audio"):
+            for file in files:
+                result = find_diuzhen(os.path.join(root, file))
+                e.write(result)
+                e.write("\n")

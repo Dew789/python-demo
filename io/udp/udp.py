@@ -1,20 +1,54 @@
+import time
 import socket
 
-# 创建UDP套接字
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-# 绑定到本地地址和端口
-server_address = ('localhost', 10000)
-sock.bind(server_address)
+def build_data():
+    frame_start = bytes.fromhex("3355")                     # 2字节，上行数据开始
+    device_type_code = bytes.fromhex("0c000000")            # 4字节
+    head0 = bytes.fromhex("00")                             # 1字节
+    head1 = bytes.fromhex("01")                             # 1字节
+    head2 = bytes.fromhex("02")                             # 1字节
+    body_include = bytes.fromhex("da")                      # 1字节
+    length = 2000 * 2
+    body_length = length.to_bytes(4, byteorder='big')       # body字段的总长度，4字节
+    body = b""
+    for i in range(2000):
+        body += bytes.fromhex("aaaa")
+    frame_end = bytes.fromhex("3355")                       # 2字节，上行数据结束
 
-# 要发送的数据
-message = 'Hello, World!'
+    data = b""
+    data += frame_start
+    data += device_type_code
+    data += head0
+    data += head1
+    data += head2
+    data += body_include
+    data += body_length
+    data += body
+    data += frame_end
 
-# 将数据转换为字节串
-data = message.encode('utf-8')
+    return data
 
-# 发送数据
-sock.sendto(data, server_address)
 
-# 关闭套接字
-sock.close()
+if __name__ == '__main__':
+    # Create a UDP socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    
+    # Server address
+    server_address = ('127.0.0.1', 18090)
+    
+    # Message to be sent
+    data = build_data()
+    count = 0
+    should_end_time = time.time() + 1
+    while True:
+        count = count + 1
+        sent = sock.sendto(data, server_address)
+        if count == 20000:
+            sleep_time = should_end_time - time.time()
+            time.sleep(sleep_time if sleep_time > 0 else 0)
+
+            count = 0
+            should_end_time = time.time() + 1
+
+        print("%s:%s" % (time.time(), count))

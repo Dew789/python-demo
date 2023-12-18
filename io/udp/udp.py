@@ -51,4 +51,4 @@ if __name__ == '__main__':
             count = 0
             should_end_time = time.time() + 1
 
-        print("%s:%s" % (time.time(), count))
+            print("send timestamp: %s" % (time.time()))
